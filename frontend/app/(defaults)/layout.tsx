@@ -7,8 +7,17 @@ import ScrollToTop from '@/components/layouts/scroll-to-top';
 import Setting from '@/components/layouts/setting';
 import Sidebar from '@/components/layouts/sidebar';
 import Portals from '@/components/portals';
+import { LOGIN_PATH } from '@/lib/auth/constants';
+import { getServerAuthSession } from '@/lib/auth/session';
+import { redirect } from 'next/navigation';
 
-export default function DefaultLayout({ children }: { children: React.ReactNode }) {
+export default async function DefaultLayout({ children }: { children: React.ReactNode }) {
+    const session = await getServerAuthSession();
+
+    if (!session) {
+        redirect(LOGIN_PATH);
+    }
+
     return (
         <>
             {/* BEGIN MAIN CONTAINER */}
