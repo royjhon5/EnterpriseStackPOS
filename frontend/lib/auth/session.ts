@@ -1,35 +1,27 @@
-// src/lib/auth/session.ts
-export type AuthSession = {
-    token: string;
-    tenantId: number;
-    userId: string;
-    fullName: string;
-    email?: string;
-    roleType?: string;
-    phoneNumber?: string;
-};
+import { cookies } from 'next/headers';
+import { AUTH_COOKIE_NAME } from '@/lib/auth/constants';
+import { decodeAuthSession } from '@/lib/auth/session-codec';
+import { AuthSession, BackendLoginResponse } from '@/lib/auth/types';
 
-const AUTH_SESSION_KEY = 'auth_session';
+export function mapBackendSession(payload: BackendLoginResponse): AuthSession {
+    return {
+        token: payload.Token,
+        tenantId: payload.TenantId,
+        userId: payload.UserId,
+        fullName: payload.FullName,
+        email: payload.Email,
+        roleType: payload.RoleType,
+        phoneNumber: payload.phoneNumber,
+    };
+}
 
-export function getAuthSession(): AuthSession | null {
-    if (typeof window === 'undefined') return null;
+export async function getServerAuthSession(): Promise<AuthSession | null> {
+    const cookieStore = await cookies();
+    const encoded = cookieStore.get(AUTH_COOKIE_NAME)?.value;
 
-    const raw = window.sessionStorage.getItem(AUTH_SESSION_KEY);
-    if (!raw) return null;
-
-    try {
-        return JSON.parse(raw) as AuthSession;
-    } catch {
+    if (!encoded) {
         return null;
     }
-}
 
-export function saveAuthSession(session: AuthSession) {
-    if (typeof window === 'undefined') return;
-    window.sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
-}
-
-export function clearAuthSession() {
-    if (typeof window === 'undefined') return;
-    window.sessionStorage.removeItem(AUTH_SESSION_KEY);
+    return decodeAuthSession(encoded);
 }

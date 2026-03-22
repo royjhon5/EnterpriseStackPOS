@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useAuthSession } from '@/hooks/use-auth-session';
 import { useDispatch, useSelector } from 'react-redux';
 import Link from 'next/link';
 import { IRootState } from '@/store';
@@ -38,6 +39,7 @@ const Header = () => {
     const pathname = usePathname();
     const dispatch = useDispatch();
     const router = useRouter();
+    const { session } = useAuthSession();
     const { t, i18n } = getTranslation();
 
     useEffect(() => {
@@ -416,13 +418,11 @@ const Header = () => {
                                         <div className="flex items-center px-4 py-4">
                                             <img className="h-10 w-10 rounded-md object-cover" src="/assets/images/user-profile.jpeg" alt="userProfile" />
                                             <div className="truncate ltr:pl-4 rtl:pr-4">
-                                                <h4 className="text-base">
-                                                    John Doe
-                                                    <span className="rounded bg-success-light px-1 text-xs text-success ltr:ml-2 rtl:ml-2">Pro</span>
+                                                <h4 className="truncate text-base">
+                                                    {session?.fullName || 'Signed-in user'}
+                                                    {session?.roleType ? <span className="rounded bg-success-light px-1 text-xs text-success ltr:ml-2 rtl:ml-2">{session.roleType}</span> : null}
                                                 </h4>
-                                                <button type="button" className="text-black/60 hover:text-primary dark:text-dark-light/60 dark:hover:text-white">
-                                                    johndoe@gmail.com
-                                                </button>
+                                                <p className="truncate text-black/60 dark:text-dark-light/60">{session?.email || 'No email provided'}</p>
                                             </div>
                                         </div>
                                     </li>
@@ -445,10 +445,18 @@ const Header = () => {
                                         </Link>
                                     </li>
                                     <li className="border-t border-white-light dark:border-white-light/10">
-                                        <Link href="/auth/boxed-signin" className="!py-3 text-danger">
+                                        <button
+                                            type="button"
+                                            className="flex w-full items-center !py-3 text-danger"
+                                            onClick={async () => {
+                                                await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                                                router.replace('/login');
+                                                router.refresh();
+                                            }}
+                                        >
                                             <IconLogout className="h-4.5 w-4.5 shrink-0 rotate-90 ltr:mr-2 rtl:ml-2" />
                                             Sign Out
-                                        </Link>
+                                        </button>
                                     </li>
                                 </ul>
                             </Dropdown>
